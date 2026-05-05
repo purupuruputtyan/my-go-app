@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    container_name: my-go-api
+    command: air -c .air.toml
+    volumes:
+      - .:/app
+      - go-mod-cache:/go/pkg/mod
+    working_dir: /app
+    ports:
+      - "8080:8080"
+    environment:
+      GO_ENV: development
+    restart: unless-stopped
+
+volumes:
+  go-mod-cache:
