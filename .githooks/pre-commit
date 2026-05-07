@@ -1,0 +1,93 @@
+#!/bin/sh
+set -e
+
+log_run() {
+	echo "running $1"
+}
+
+log_ok() {
+	echo "✔ $1"
+}
+
+run_step() {
+	label="$1"
+	shift
+
+	logfile="$tmpdir/pre-commit-step.log"
+	: >"$logfile"
+
+	printf "running %s " "$label"
+	"$@" >"$logfile" 2>&1 &
+	pid=$!
+
+	i=0
+	sp='|/-\'
+	while kill -0 "$pid" 2>/dev/null; do
+		i=$(( (i + 1) % 4 ))
+		ch=$(printf "%s" "$sp" | cut -c $((i + 1)))
+		printf "\rrunning %s %s" "$label" "$ch"
+		sleep 0.1
+	done
+
+	if wait "$pid"; then
+		printf "\r"
+		log_ok "$label"
+	else
+		printf "\r"
+		echo "✖ $label"
+		if [ -s "$logfile" ]; then
+			cat "$logfile"
+		fi
+		exit 1
+	fi
+}
+
+# Staged Go files only (add → format → re-stage so the commit is always formatted).
+tmpdir=$(mktemp -d)
+trap 'rm -rf "$tmpdir"' EXIT
+
+git diff --cached --name-only --diff-filter=ACM >"$tmpdir/list"
+grep '\.go$' "$tmpdir/list" >"$tmpdir/gofiles" 2>/dev/null || true
+
+if [ "${PRE_COMMIT_GOFMT_CHECK:-}" = "1" ]; then
+	log_run "gofmt (check mode)"
+	bad=""
+	if [ ! -s "$tmpdir/gofiles" ]; then
+		echo "- no staged .go files, skip gofmt"
+		log_ok "gofmt"
+	else
+	while IFS= read -r f; do
+		[ -z "$f" ] && continue
+		[ -f "$f" ] || continue
+		if ! gofmt -l "$f" | grep -q .; then
+			: # formatted
+		else
+			bad="$bad $f"
+		fi
+	done <"$tmpdir/gofiles"
+	if [ -n "$bad" ]; then
+		echo "gofmt would change these files — run: make fmt"
+		exit 1
+	fi
+	log_ok "gofmt"
+	fi
+	run_step "go vet" go vet ./...
+	run_step "go test" go test ./...
+	exit 0
+fi
+
+log_run "gofmt"
+if [ ! -s "$tmpdir/gofiles" ]; then
+	echo "- no staged .go files, skip gofmt"
+else
+	while IFS= read -r f; do
+		[ -z "$f" ] && continue
+		[ -f "$f" ] || continue
+		gofmt -w "$f"
+		git add "$f"
+	done <"$tmpdir/gofiles"
+fi
+log_ok "gofmt"
+
+run_step "go vet" go vet ./...
+run_step "go test" go test ./...
