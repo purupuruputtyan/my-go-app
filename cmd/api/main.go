@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 	"my-go-app/internal/handler/todo"
-	"my-go-app/internal/repository/todo"
+	"my-go-app/internal/infrastructure/todo"
 	"my-go-app/internal/usecase/todo"
 	"net/http"
 	"os"
@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	repo := repository.NewTodoMemory()
+	repo := memory.NewTodoMemory()
 	todoUsecase := todo.NewTodoUseCase(repo)
 	todoHandler := handler.New(todoUsecase)
 
@@ -24,7 +24,18 @@ func main() {
 		_, _ = w.Write([]byte("ok"))
 	})
 
-	mux.HandleFunc("/todos", todoHandler.FindAll)
+	mux.HandleFunc("/todos", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			todoHandler.FindAll(w, r)
+
+		case http.MethodPost:
+			todoHandler.Create(w, r)
+
+		default:
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
