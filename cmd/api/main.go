@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 	"my-go-app/internal/handler/todo"
-	"my-go-app/internal/repository/todo"
+	"my-go-app/internal/infrastructure/todo"
 	"my-go-app/internal/usecase/todo"
 	"net/http"
 	"os"
@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	repo := repository.NewTodoMemory()
+	repo := memory.NewTodoMemory()
 	todoUsecase := todo.NewTodoUseCase(repo)
 	todoHandler := handler.New(todoUsecase)
 

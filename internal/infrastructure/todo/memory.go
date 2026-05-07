@@ -1,4 +1,4 @@
-package repository
+package memory
 
 import (
 	"my-go-app/internal/domain/todo"
