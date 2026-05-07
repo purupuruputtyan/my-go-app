@@ -18,3 +18,28 @@ func TestTodoMemory_FindAll(t *testing.T) {
 		t.Fatalf("expected first todo title to be first, got %s", todos[0].Title)
 	}
 }
+
+func TestTodoMemory_Create(t *testing.T) {
+
+	repo := NewTodoMemory()
+
+	todo := todo.Todo{
+		Title: "first",
+	}
+
+	created := repo.Create(todo)
+
+	if created.Title != "first" {
+		t.Fatalf("expected title first, got %s", created.Title)
+	}
+
+	todos := repo.FindAll()
+
+	if len(todos) != 1 {
+		t.Fatalf("expected 1 todo, got %d", len(todos))
+	}
+
+	if todos[0].Title != "first" {
+		t.Fatalf("expected title first, got %s", todos[0].Title)
+	}
+}
