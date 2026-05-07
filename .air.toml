@@ -2,7 +2,7 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-  cmd = "go build -o ./tmp/server ."
+  cmd = "go build -o ./tmp/server ./cmd/api"
   delay = 200
   stop_on_error = true
   send_interrupt = true
