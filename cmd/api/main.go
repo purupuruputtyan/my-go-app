@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"log"
+	"my-go-app/internal/handler/todo"
+	"my-go-app/internal/repository/todo"
+	"my-go-app/internal/usecase/todo"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,11 +14,17 @@ import (
 )
 
 func main() {
+	repo := repository.NewTodoMemory()
+	todoUsecase := todo.NewTodoUseCase(repo)
+	todoHandler := handler.New(todoUsecase)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))
 	})
+
+	mux.HandleFunc("/todos", todoHandler.FindAll)
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
