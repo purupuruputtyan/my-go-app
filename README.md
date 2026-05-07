@@ -21,6 +21,35 @@ docker --version
 docker compose version
 ```
 
+## コミット時のコード整形（Git フック）
+
+コミット直前に、**ステージ済みの `.go` ファイル**へ `gofmt` をかけ、整形結果を同じコミットに含めます。  
+（いわゆる **pre-commit フック** です。ショートカットキーではなく、Git がコミット時に自動で呼び出します。）
+
+### 初回だけ（このリポジトリで有効化）
+
+```bash
+git config core.hooksPath .githooks
+chmod +x .githooks/pre-commit
+```
+
+別マシンでクローンしたら、`core.hooksPath` をもう一度設定してください（ローカル設定のためリポジトリには含まれません）。
+
+### チェックだけしてコミットを止めたい場合
+
+デフォルトは自動整形です。整形漏れを許さず **失敗させたい** ときは、環境変数を付けます。
+
+```bash
+PRE_COMMIT_GOFMT_CHECK=1 git commit
+```
+
+### 手動
+
+```bash
+make fmt        # 全 .go を整形
+make fmt-check  # 未整形があれば終了コード 1（CI 向け）
+```
+
 ## 開発環境の構築手順
 
 `air` によるホットリロードを使います。  
@@ -115,3 +144,9 @@ docker compose down -v
 
 - `main.go`  
   最小限の API サーバ実装です。
+
+- `.githooks/pre-commit`  
+  コミット前に `gofmt` を実行する Git フックです。
+
+- `Makefile`  
+  `make fmt` / `make fmt-check` で手動整形・整形チェックができます。
