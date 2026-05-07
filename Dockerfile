@@ -11,7 +11,7 @@ CMD ["air", "-c", ".air.toml"]
 
 FROM base AS builder
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o /out/server .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o /out/server ./cmd/api
 
 FROM gcr.io/distroless/static-debian12:nonroot AS prod
 WORKDIR /app
