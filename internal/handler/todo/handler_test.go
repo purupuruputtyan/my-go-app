@@ -7,6 +7,7 @@ import (
 	uc "my-go-app/internal/usecase/todo"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -36,5 +37,39 @@ func TestTodoHandler_FindAll(t *testing.T) {
 	}
 	if got[0].Title != "first" {
 		t.Fatalf("expected title first, got %s", got[0].Title)
+	}
+}
+
+func TestTodoHandler_Create(t *testing.T) {
+
+	repo := memory.NewTodoMemory()
+	usecase := uc.NewTodoUseCase(repo)
+	h := New(usecase)
+
+	reqBody := strings.NewReader(`{"title":"first"}`)
+
+	req := httptest.NewRequest(http.MethodPost, "/todos", reqBody)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+
+	h.Create(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected status 201, got %d", w.Code)
+	}
+
+	var got domain.Todo
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatalf("failed to decode response body: %v", err)
+	}
+
+	if got.Title != "first" {
+		t.Fatalf("expected title first, got %s", got.Title)
+	}
+
+	todos := repo.FindAll()
+	if len(todos) != 1 {
+		t.Fatalf("expected 1 todo in repo, got %d", len(todos))
 	}
 }

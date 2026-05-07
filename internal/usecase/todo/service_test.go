@@ -32,3 +32,17 @@ func TestTodoUseCase_FindAll(t *testing.T) {
 		t.Fatalf("expected title learn go, got %s", todos[0].Title)
 	}
 }
+
+func TestTodoUseCase_Create(t *testing.T) {
+	repo := &stubRepo{}
+	uc := NewTodoUseCase(repo)
+
+	created := uc.Create("learn go")
+	if created.Title != "learn go" {
+		t.Fatalf("expected title learn go, got %s", created.Title)
+	}
+
+	if len(repo.todos) != 1 {
+		t.Fatalf("expected 1 todo, got %d", len(repo.todos))
+	}
+}
