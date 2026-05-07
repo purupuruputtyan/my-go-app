@@ -1,17 +1,28 @@
 package repository
 
-import "my-go-app/internal/domain/todo"
+import (
+	"my-go-app/internal/domain/todo"
+	"strconv"
+)
 
 type TodoMemory struct {
-	todos []domain.Todo
+	todos []todo.Todo
 }
 
 func NewTodoMemory() *TodoMemory {
 	return &TodoMemory{
-		todos: []domain.Todo{},
+		todos: []todo.Todo{},
 	}
 }
 
-func (r *TodoMemory) FindAll() []domain.Todo {
+func (r *TodoMemory) FindAll() []todo.Todo {
 	return r.todos
+}
+
+func (r *TodoMemory) Create(todo todo.Todo) todo.Todo {
+	todo.ID = strconv.Itoa(len(r.todos) + 1)
+
+	r.todos = append(r.todos, todo)
+
+	return todo
 }

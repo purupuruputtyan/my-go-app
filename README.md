@@ -73,6 +73,8 @@ curl http://localhost:8080/
 - `/healthz` -> `ok`
 - `/` -> `{"message":"Go API is running"}`
 
+※ 現在のエンドポイント設計は REST API の思想に合わせ、アクション名ではなくリソース指向のパス（例: `/todos`）を採用しています。将来的に `POST/PUT/PATCH/DELETE` などへ拡張する際も、HTTP メソッドごとに責務を分けます。
+
 3. 開発を終了する
 
 ```bash
