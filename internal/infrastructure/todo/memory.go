@@ -1,7 +1,6 @@
 package memory
 
 import (
-	"errors"
 	"github.com/google/uuid"
 	"my-go-app/internal/domain/todo"
 )
@@ -35,5 +34,5 @@ func (r *TodoMemory) Show(id string) (domain.Todo, error) {
 		}
 	}
 
-	return domain.Todo{}, errors.New("not found")
+	return domain.Todo{}, domain.ErrTodoNotFound
 }

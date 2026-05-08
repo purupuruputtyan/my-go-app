@@ -1,7 +1,6 @@
 package todo
 
 import (
-	"errors"
 	"my-go-app/internal/domain/todo"
 	"testing"
 )
@@ -25,7 +24,7 @@ func (s *stubRepo) Show(id string) (domain.Todo, error) {
 			return t, nil
 		}
 	}
-	return domain.Todo{}, errors.New("not found")
+	return domain.Todo{}, domain.ErrTodoNotFound
 }
 
 func TestTodoUseCase_FindAll(t *testing.T) {
