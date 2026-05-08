@@ -74,6 +74,49 @@ func TestTodoHandler_Create(t *testing.T) {
 	}
 }
 
+func TestTodoHandler_Create_EmptyTitle(t *testing.T) {
+	repo := memory.NewTodoMemory()
+	usecase := uc.NewTodoUseCase(repo)
+	h := New(usecase)
+
+	reqBody := strings.NewReader(`{"title":""}`)
+
+	req := httptest.NewRequest(http.MethodPost, "/todos", reqBody)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+
+	h.Create(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", w.Code)
+	}
+}
+
+func TestTodoHandler_Create_TitleTooLong(t *testing.T) {
+	repo := memory.NewTodoMemory()
+	usecase := uc.NewTodoUseCase(repo)
+	h := New(usecase)
+
+	longTitle := "a"
+	for len(longTitle) <= 100 {
+		longTitle += "a"
+	}
+
+	reqBody := strings.NewReader(`{"title":"` + longTitle + `"}`)
+
+	req := httptest.NewRequest(http.MethodPost, "/todos", reqBody)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+
+	h.Create(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", w.Code)
+	}
+}
+
 func TestTodoHandler_Create_InvalidJSON(t *testing.T) {
 	repo := memory.NewTodoMemory()
 	usecase := uc.NewTodoUseCase(repo)
