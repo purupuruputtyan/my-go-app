@@ -93,3 +93,61 @@ func TestTodoMemory_Show_NotFound(t *testing.T) {
 		t.Fatalf("expected error, got nil")
 	}
 }
+
+func TestTodoMemory_Update(t *testing.T) {
+	repo := NewTodoMemory()
+
+	todo := domain.Todo{
+		Title: "first",
+	}
+
+	created := repo.Create(todo)
+
+	updateTodo := domain.Todo{
+		ID:        created.ID,
+		Title:     "更新テスト",
+		Completed: true,
+	}
+
+	updated, err := repo.Update(updateTodo)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if updated.ID != created.ID {
+		t.Fatalf(
+			"expected id %s, got %s",
+			created.ID,
+			updated.ID,
+		)
+	}
+
+	if updated.Title != "更新テスト" {
+		t.Fatalf(
+			"expected title 更新テスト, got %s",
+			updated.Title,
+		)
+	}
+
+	if !updated.Completed {
+		t.Fatalf("expected completed true")
+	}
+
+	todos := repo.FindAll()
+
+	if len(todos) != 1 {
+		t.Fatalf("expected 1 todo, got %d", len(todos))
+	}
+
+	if todos[0].Title != "更新テスト" {
+		t.Fatalf(
+			"expected title 更新テスト, got %s",
+			todos[0].Title,
+		)
+	}
+
+	if !todos[0].Completed {
+		t.Fatalf("expected completed true")
+	}
+}
