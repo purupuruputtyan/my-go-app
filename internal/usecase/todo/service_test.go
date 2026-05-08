@@ -51,7 +51,45 @@ func TestTodoUseCase_Create(t *testing.T) {
 		t.Fatalf("expected title learn go, got %s", created.Title)
 	}
 
+	if created.Completed {
+		t.Fatalf("expected completed false")
+	}
+
 	if len(repo.todos) != 1 {
 		t.Fatalf("expected 1 todo, got %d", len(repo.todos))
+	}
+}
+
+func TestTodoUseCase_Show(t *testing.T) {
+	repo := &stubRepo{
+		todos: []domain.Todo{
+			{ID: "1", Title: "learn go", Completed: false},
+		},
+	}
+	uc := NewTodoUseCase(repo)
+
+	result, err := uc.Show("1")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if result.ID != "1" {
+		t.Fatalf("expected id 1, got %s", result.ID)
+	}
+
+	if result.Title != "learn go" {
+		t.Fatalf("expected title learn go, got %s", result.Title)
+	}
+}
+
+func TestTodoUseCase_Show_NotFound(t *testing.T) {
+	repo := &stubRepo{}
+	uc := NewTodoUseCase(repo)
+
+	_, err := uc.Show("not-found-id")
+
+	if err == nil {
+		t.Fatalf("expected error, got nil")
 	}
 }
