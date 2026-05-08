@@ -24,3 +24,7 @@ func (u *TodoUseCase) Create(title string) todo.Todo {
 
 	return u.repo.Create(todo)
 }
+
+func (u *TodoUseCase) Show(id string) (todo.Todo, error) {
+	return u.repo.Show(id)
+}
