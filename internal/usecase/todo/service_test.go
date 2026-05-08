@@ -2,7 +2,7 @@ package todo
 
 import (
 	"errors"
-	domain "my-go-app/internal/domain/todo"
+	"my-go-app/internal/domain/todo"
 	"testing"
 )
 

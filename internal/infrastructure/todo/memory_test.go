@@ -8,7 +8,7 @@ import (
 func TestTodoMemory_FindAll(t *testing.T) {
 	repo := NewTodoMemory()
 
-	_ = repo.Create(todo.Todo{Title: "first"})
+	_ = repo.Create(domain.Todo{Title: "first"})
 
 	todos := repo.FindAll()
 	if len(todos) != 1 {
@@ -22,7 +22,7 @@ func TestTodoMemory_FindAll(t *testing.T) {
 func TestTodoMemory_Create(t *testing.T) {
 	repo := NewTodoMemory()
 
-	todo := todo.Todo{
+	todo := domain.Todo{
 		Title: "first",
 	}
 
@@ -54,7 +54,7 @@ func TestTodoMemory_Create(t *testing.T) {
 func TestTodoMemory_Show(t *testing.T) {
 	repo := NewTodoMemory()
 
-	created := repo.Create(todo.Todo{
+	created := repo.Create(domain.Todo{
 		Title:     "テスト",
 		Completed: true,
 	})
@@ -81,7 +81,7 @@ func TestTodoMemory_Show(t *testing.T) {
 func TestTodoMemory_Show_NotFound(t *testing.T) {
 	repo := NewTodoMemory()
 
-	_ = repo.Create(todo.Todo{
+	_ = repo.Create(domain.Todo{
 		Title:     "テスト",
 		Completed: true,
 	})

@@ -7,20 +7,20 @@ import (
 )
 
 type TodoMemory struct {
-	todos []todo.Todo
+	todos []domain.Todo
 }
 
 func NewTodoMemory() *TodoMemory {
 	return &TodoMemory{
-		todos: []todo.Todo{},
+		todos: []domain.Todo{},
 	}
 }
 
-func (r *TodoMemory) FindAll() []todo.Todo {
+func (r *TodoMemory) FindAll() []domain.Todo {
 	return r.todos
 }
 
-func (r *TodoMemory) Create(todo todo.Todo) todo.Todo {
+func (r *TodoMemory) Create(todo domain.Todo) domain.Todo {
 	todo.ID = uuid.NewString()
 
 	r.todos = append(r.todos, todo)
@@ -28,12 +28,12 @@ func (r *TodoMemory) Create(todo todo.Todo) todo.Todo {
 	return todo
 }
 
-func (r *TodoMemory) Show(id string) (todo.Todo, error) {
+func (r *TodoMemory) Show(id string) (domain.Todo, error) {
 	for _, todo := range r.todos {
 		if todo.ID == id {
 			return todo, nil
 		}
 	}
 
-	return todo.Todo{}, errors.New("not found")
+	return domain.Todo{}, errors.New("not found")
 }

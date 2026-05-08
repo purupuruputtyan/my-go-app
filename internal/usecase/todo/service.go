@@ -3,21 +3,21 @@ package todo
 import "my-go-app/internal/domain/todo"
 
 type TodoUseCase struct {
-	repo todo.TodoRepository
+	repo domain.TodoRepository
 }
 
-func NewTodoUseCase(repo todo.TodoRepository) *TodoUseCase {
+func NewTodoUseCase(repo domain.TodoRepository) *TodoUseCase {
 	return &TodoUseCase{
 		repo: repo,
 	}
 }
 
-func (u *TodoUseCase) FindAll() []todo.Todo {
+func (u *TodoUseCase) FindAll() []domain.Todo {
 	return u.repo.FindAll()
 }
 
-func (u *TodoUseCase) Create(title string) todo.Todo {
-	todo := todo.Todo{
+func (u *TodoUseCase) Create(title string) domain.Todo {
+	todo := domain.Todo{
 		Title:     title,
 		Completed: false,
 	}
@@ -25,6 +25,6 @@ func (u *TodoUseCase) Create(title string) todo.Todo {
 	return u.repo.Create(todo)
 }
 
-func (u *TodoUseCase) Show(id string) (todo.Todo, error) {
+func (u *TodoUseCase) Show(id string) (domain.Todo, error) {
 	return u.repo.Show(id)
 }
