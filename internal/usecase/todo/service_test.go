@@ -3,7 +3,7 @@ package todo
 import (
 	"testing"
 
-	"my-go-app/internal/domain/todo"
+	domain "my-go-app/internal/domain/todo"
 )
 
 type stubRepo struct {
@@ -246,5 +246,55 @@ func TestTodoUseCase_Update_TitleTooLong(t *testing.T) {
 
 	if err != domain.ErrTitleTooLong {
 		t.Fatalf("expected ErrTitleTooLong, got %v", err)
+	}
+}
+
+func TestTodoUseCase_Delete(t *testing.T) {
+	repo := &stubRepo{
+		todos: []domain.Todo{
+			{ID: "1", Title: "learn go", Completed: false},
+		},
+	}
+	uc := NewTodoUseCase(repo)
+
+	result, err := uc.Delete("1")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if result.ID != "1" {
+		t.Fatalf("expected id 1, got %s", result.ID)
+	}
+
+	if result.Title != "learn go" {
+		t.Fatalf("expected title learn go, got %s", result.Title)
+	}
+
+	todos := repo.FindAll()
+
+	if len(todos) != 0 {
+		t.Fatalf(
+			"expected 0 todos, got %d",
+			len(todos),
+		)
+	}
+}
+
+func TestTodoUseCase_Delete_NotFound(t *testing.T) {
+	repo := &stubRepo{}
+	uc := NewTodoUseCase(repo)
+
+	_, err := uc.Delete("not-found-id")
+
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+
+	if err != domain.ErrTodoNotFound {
+		t.Fatalf(
+			"expected ErrTodoNotFound, got %v",
+			err,
+		)
 	}
 }
