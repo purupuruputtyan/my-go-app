@@ -107,3 +107,19 @@ func (h *TodoHandler) Update(w http.ResponseWriter, r *http.Request, id string) 
 		return
 	}
 }
+
+func (h *TodoHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
+	todo, err := h.usecase.Delete(id)
+	if err != nil {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(todo); err != nil {
+		http.Error(w, "failed to encode json", http.StatusInternalServerError)
+		return
+	}
+}

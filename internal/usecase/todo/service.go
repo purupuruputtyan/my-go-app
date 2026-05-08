@@ -47,3 +47,7 @@ func (u *TodoUseCase) Update(todo domain.Todo) (domain.Todo, error) {
 
 	return u.repo.Update(todo)
 }
+
+func (u *TodoUseCase) Delete(id string) (domain.Todo, error) {
+	return u.repo.Delete(id)
+}

@@ -39,6 +39,22 @@ func (s *stubRepo) Update(t domain.Todo) (domain.Todo, error) {
 	return domain.Todo{}, domain.ErrTodoNotFound
 }
 
+func (s *stubRepo) Delete(id string) (domain.Todo, error) {
+	for i, t := range s.todos {
+		if t.ID == id {
+			deleted := t
+			s.todos = append(
+				s.todos[:i],
+				s.todos[i+1:]...,
+			)
+
+			return deleted, nil
+		}
+	}
+
+	return domain.Todo{}, domain.ErrTodoNotFound
+}
+
 func TestTodoUseCase_FindAll(t *testing.T) {
 	repo := &stubRepo{
 		todos: []domain.Todo{{ID: "1", Title: "learn go", Completed: false}},
