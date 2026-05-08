@@ -24,6 +24,7 @@ type todoRoutesHandler interface {
 	FindAll(http.ResponseWriter, *http.Request)
 	Create(http.ResponseWriter, *http.Request)
 	Show(http.ResponseWriter, *http.Request, string)
+	Update(http.ResponseWriter, *http.Request, string)
 }
 
 func main() {
@@ -95,7 +96,17 @@ func registerTodoRoutes(mux *http.ServeMux, todoHandler todoRoutesHandler) {
 			return
 		}
 
-		todoHandler.Show(w, r, id)
+		switch r.Method {
+
+		case http.MethodGet:
+			todoHandler.Show(w, r, id)
+
+		case http.MethodPut:
+			todoHandler.Update(w, r, id)
+
+		default:
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
 	})
 }
 

@@ -28,6 +28,17 @@ func (s *stubRepo) Show(id string) (domain.Todo, error) {
 	return domain.Todo{}, domain.ErrTodoNotFound
 }
 
+func (s *stubRepo) Update(t domain.Todo) (domain.Todo, error) {
+	for i, todo := range s.todos {
+		if todo.ID == t.ID {
+			s.todos[i] = t
+			return t, nil
+		}
+	}
+
+	return domain.Todo{}, domain.ErrTodoNotFound
+}
+
 func TestTodoUseCase_FindAll(t *testing.T) {
 	repo := &stubRepo{
 		todos: []domain.Todo{{ID: "1", Title: "learn go", Completed: false}},
@@ -129,5 +140,95 @@ func TestTodoUseCase_Show_NotFound(t *testing.T) {
 
 	if err == nil {
 		t.Fatalf("expected error, got nil")
+	}
+}
+
+func TestTodoUseCase_Update(t *testing.T) {
+	repo := &stubRepo{
+		todos: []domain.Todo{
+			{ID: "1", Title: "before", Completed: false},
+		},
+	}
+	uc := NewTodoUseCase(repo)
+
+	updateTodo := domain.Todo{
+		ID:        "1",
+		Title:     "after",
+		Completed: true,
+	}
+
+	updated, err := uc.Update(updateTodo)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if updated.ID != "1" {
+		t.Fatalf("expected id 1, got %s", updated.ID)
+	}
+
+	if updated.Title != "after" {
+		t.Fatalf(
+			"expected title after, got %s",
+			updated.Title,
+		)
+	}
+
+	if !updated.Completed {
+		t.Fatalf("expected completed true")
+	}
+}
+
+func TestTodoUseCase_Update_EmptyTitle(t *testing.T) {
+	repo := &stubRepo{
+		todos: []domain.Todo{
+			{ID: "1", Title: "before", Completed: false},
+		},
+	}
+	uc := NewTodoUseCase(repo)
+
+	updateTodo := domain.Todo{
+		ID:        "1",
+		Title:     "",
+		Completed: true,
+	}
+
+	_, err := uc.Update(updateTodo)
+
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+
+	if err != domain.ErrTitleRequired {
+		t.Fatalf("expected ErrTitleRequired, got %v", err)
+	}
+}
+
+func TestTodoUseCase_Update_TitleTooLong(t *testing.T) {
+	repo := &stubRepo{
+		todos: []domain.Todo{
+			{ID: "1", Title: "before", Completed: false},
+		},
+	}
+	uc := NewTodoUseCase(repo)
+
+	longTitle := "a"
+	for len(longTitle) <= 100 {
+		longTitle += "a"
+	}
+
+	updateTodo := domain.Todo{
+		ID:        "1",
+		Title:     longTitle,
+		Completed: true,
+	}
+
+	_, err := uc.Update(updateTodo)
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+
+	if err != domain.ErrTitleTooLong {
+		t.Fatalf("expected ErrTitleTooLong, got %v", err)
 	}
 }

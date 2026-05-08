@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	domain "my-go-app/internal/domain/todo"
 	"my-go-app/internal/usecase/todo"
 )
 
@@ -13,6 +14,11 @@ type TodoHandler struct {
 
 type CreateTodoRequest struct {
 	Title string `json:"title"`
+}
+
+type UpdateTodoRequest struct {
+	Title     string `json:"title"`
+	Completed bool   `json:"completed"`
 }
 
 func New(usecase *todo.TodoUseCase) *TodoHandler {
@@ -67,6 +73,36 @@ func (h *TodoHandler) Show(w http.ResponseWriter, r *http.Request, id string) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(todo); err != nil {
+		http.Error(w, "failed to encode json", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *TodoHandler) Update(w http.ResponseWriter, r *http.Request, id string) {
+	var req UpdateTodoRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
+	todo := domain.Todo{
+		ID:        id,
+		Title:     req.Title,
+		Completed: req.Completed,
+	}
+
+	updated, err := h.usecase.Update(todo)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(updated); err != nil {
 		http.Error(w, "failed to encode json", http.StatusInternalServerError)
 		return
 	}

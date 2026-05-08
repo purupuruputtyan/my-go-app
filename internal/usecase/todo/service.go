@@ -35,3 +35,15 @@ func (u *TodoUseCase) Create(title string) (domain.Todo, error) {
 func (u *TodoUseCase) Show(id string) (domain.Todo, error) {
 	return u.repo.Show(id)
 }
+
+func (u *TodoUseCase) Update(todo domain.Todo) (domain.Todo, error) {
+	if todo.Title == "" {
+		return domain.Todo{}, domain.ErrTitleRequired
+	}
+
+	if len(todo.Title) > 100 {
+		return domain.Todo{}, domain.ErrTitleTooLong
+	}
+
+	return u.repo.Update(todo)
+}

@@ -187,3 +187,170 @@ func TestTodoHandler_Show_NotFound(t *testing.T) {
 		t.Fatalf("expected status 404, got %d", w.Code)
 	}
 }
+
+func TestTodoHandler_Update(t *testing.T) {
+	repo := memory.NewTodoMemory()
+	usecase := uc.NewTodoUseCase(repo)
+	h := New(usecase)
+
+	created := repo.Create(domain.Todo{
+		Title:     "before",
+		Completed: false,
+	})
+
+	reqBody := strings.NewReader(`{
+		"title":"after",
+		"completed":true
+	}`)
+
+	req := httptest.NewRequest(
+		http.MethodPut,
+		"/todos/"+created.ID,
+		reqBody,
+	)
+
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+
+	h.Update(w, req, created.ID)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", w.Code)
+	}
+
+	var got domain.Todo
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatalf("failed to decode response body: %v", err)
+	}
+
+	if got.ID != created.ID {
+		t.Fatalf(
+			"expected id %s, got %s",
+			created.ID,
+			got.ID,
+		)
+	}
+
+	if got.Title != "after" {
+		t.Fatalf(
+			"expected title after, got %s",
+			got.Title,
+		)
+	}
+
+	if !got.Completed {
+		t.Fatalf("expected completed true")
+	}
+}
+
+func TestTodoHandler_Update_EmptyTitle(t *testing.T) {
+	repo := memory.NewTodoMemory()
+	usecase := uc.NewTodoUseCase(repo)
+	h := New(usecase)
+
+	created := repo.Create(domain.Todo{
+		Title:     "before",
+		Completed: false,
+	})
+
+	reqBody := strings.NewReader(`{
+		"title":"",
+		"completed":true
+	}`)
+
+	req := httptest.NewRequest(
+		http.MethodPut,
+		"/todos/"+created.ID,
+		reqBody,
+	)
+
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+
+	h.Update(w, req, created.ID)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", w.Code)
+	}
+}
+
+func TestTodoHandler_Update_TitleTooLong(t *testing.T) {
+	repo := memory.NewTodoMemory()
+	usecase := uc.NewTodoUseCase(repo)
+	h := New(usecase)
+
+	created := repo.Create(domain.Todo{
+		Title:     "before",
+		Completed: false,
+	})
+
+	longTitle := "a"
+	for len(longTitle) <= 100 {
+		longTitle += "a"
+	}
+
+	reqBody := strings.NewReader(`{"title":"` + longTitle + `"}`)
+
+	req := httptest.NewRequest(
+		http.MethodPut,
+		"/todos/"+created.ID,
+		reqBody,
+	)
+
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+
+	h.Update(w, req, created.ID)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", w.Code)
+	}
+}
+
+func TestTodoHandler_Update_InvalidJSON(t *testing.T) {
+	repo := memory.NewTodoMemory()
+	usecase := uc.NewTodoUseCase(repo)
+	h := New(usecase)
+
+	created := repo.Create(domain.Todo{
+		Title:     "before",
+		Completed: false,
+	})
+
+	reqBody := strings.NewReader(`{"title":`)
+
+	req := httptest.NewRequest(
+		http.MethodPut,
+		"/todos/"+created.ID,
+		reqBody,
+	)
+
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+
+	h.Update(w, req, created.ID)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", w.Code)
+	}
+
+	todos := repo.FindAll()
+	if len(todos) != 1 {
+		t.Fatalf("expected 1 todo in repo, got %d", len(todos))
+	}
+
+	if todos[0].Title != "before" {
+		t.Fatalf(
+			"expected title before, got %s",
+			todos[0].Title,
+		)
+	}
+
+	if todos[0].Completed {
+		t.Fatalf("expected completed false")
+	}
+}
