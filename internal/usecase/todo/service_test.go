@@ -1,6 +1,7 @@
 package todo
 
 import (
+	"errors"
 	domain "my-go-app/internal/domain/todo"
 	"testing"
 )
@@ -16,6 +17,15 @@ func (s *stubRepo) FindAll() []domain.Todo {
 func (s *stubRepo) Create(t domain.Todo) domain.Todo {
 	s.todos = append(s.todos, t)
 	return t
+}
+
+func (s *stubRepo) Show(id string) (domain.Todo, error) {
+	for _, t := range s.todos {
+		if t.ID == id {
+			return t, nil
+		}
+	}
+	return domain.Todo{}, errors.New("not found")
 }
 
 func TestTodoUseCase_FindAll(t *testing.T) {

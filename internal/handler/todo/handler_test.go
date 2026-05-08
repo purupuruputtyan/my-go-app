@@ -73,3 +73,35 @@ func TestTodoHandler_Create(t *testing.T) {
 		t.Fatalf("expected 1 todo in repo, got %d", len(todos))
 	}
 }
+
+func TestTodoHandler_Show(t *testing.T) {
+	repo := memory.NewTodoMemory()
+	usecase := uc.NewTodoUseCase(repo)
+	h := New(usecase)
+
+	created := repo.Create(domain.Todo{
+		Title: "first",
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/todos/"+created.ID, nil)
+	w := httptest.NewRecorder()
+
+	h.Show(w, req, created.ID)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", w.Code)
+	}
+
+	var got domain.Todo
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatalf("failed to decode response body: %v", err)
+	}
+
+	if got.ID != created.ID {
+		t.Fatalf("expected id %s, got %s", created.ID, got.ID)
+	}
+
+	if got.Title != "first" {
+		t.Fatalf("expected title first, got %s", got.Title)
+	}
+}
