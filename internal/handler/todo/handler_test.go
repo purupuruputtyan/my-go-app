@@ -354,3 +354,55 @@ func TestTodoHandler_Update_InvalidJSON(t *testing.T) {
 		t.Fatalf("expected completed false")
 	}
 }
+
+func TestTodoHandler_Delete(t *testing.T) {
+	repo := memory.NewTodoMemory()
+	usecase := uc.NewTodoUseCase(repo)
+	h := New(usecase)
+
+	created := repo.Create(domain.Todo{
+		Title: "first",
+	})
+
+	req := httptest.NewRequest(http.MethodDelete, "/todos/"+created.ID, nil)
+	w := httptest.NewRecorder()
+
+	h.Delete(w, req, created.ID)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", w.Code)
+	}
+
+	var got domain.Todo
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatalf("failed to decode response body: %v", err)
+	}
+
+	if got.ID != created.ID {
+		t.Fatalf("expected id %s, got %s", created.ID, got.ID)
+	}
+
+	todos := repo.FindAll()
+
+	if len(todos) != 0 {
+		t.Fatalf(
+			"expected 0 todos, got %d",
+			len(todos),
+		)
+	}
+}
+
+func TestTodoHandler_Delete_NotFound(t *testing.T) {
+	repo := memory.NewTodoMemory()
+	usecase := uc.NewTodoUseCase(repo)
+	h := New(usecase)
+
+	req := httptest.NewRequest(http.MethodDelete, "/todos/not-found-id", nil)
+	w := httptest.NewRecorder()
+
+	h.Delete(w, req, "not-found-id")
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d", w.Code)
+	}
+}

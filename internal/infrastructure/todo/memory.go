@@ -50,3 +50,19 @@ func (r *TodoMemory) Update(todo domain.Todo) (domain.Todo, error) {
 
 	return domain.Todo{}, domain.ErrTodoNotFound
 }
+
+func (r *TodoMemory) Delete(id string) (domain.Todo, error) {
+	for i, t := range r.todos {
+		if t.ID == id {
+			deleted := t
+			r.todos = append(
+				r.todos[:i],
+				r.todos[i+1:]...,
+			)
+
+			return deleted, nil
+		}
+	}
+
+	return domain.Todo{}, domain.ErrTodoNotFound
+}
