@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -34,6 +35,14 @@ func main() {
 
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/todos/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			id := strings.TrimPrefix(r.URL.Path, "/todos/")
+			todoHandler.Show(w, r, id)
 		}
 	})
 

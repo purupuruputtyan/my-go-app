@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"errors"
 	"my-go-app/internal/domain/todo"
 	"strconv"
 )
@@ -25,4 +26,14 @@ func (r *TodoMemory) Create(todo todo.Todo) todo.Todo {
 	r.todos = append(r.todos, todo)
 
 	return todo
+}
+
+func (r *TodoMemory) Show(id string) (todo.Todo, error) {
+	for _, todo := range r.todos {
+		if todo.ID == id {
+			return todo, nil
+		}
+	}
+
+	return todo.Todo{}, errors.New("not found")
 }
