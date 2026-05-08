@@ -1,8 +1,9 @@
 package memory
 
 import (
-	"my-go-app/internal/domain/todo"
 	"testing"
+
+	"my-go-app/internal/domain/todo"
 )
 
 func TestTodoMemory_FindAll(t *testing.T) {

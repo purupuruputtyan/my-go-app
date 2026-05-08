@@ -2,13 +2,14 @@ package handler
 
 import (
 	"encoding/json"
-	domain "my-go-app/internal/domain/todo"
-	memory "my-go-app/internal/infrastructure/todo"
-	uc "my-go-app/internal/usecase/todo"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	domain "my-go-app/internal/domain/todo"
+	memory "my-go-app/internal/infrastructure/todo"
+	uc "my-go-app/internal/usecase/todo"
 )
 
 func TestTodoHandler_FindAll(t *testing.T) {

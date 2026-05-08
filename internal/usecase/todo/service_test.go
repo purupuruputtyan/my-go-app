@@ -1,8 +1,9 @@
 package todo
 
 import (
-	"my-go-app/internal/domain/todo"
 	"testing"
+
+	"my-go-app/internal/domain/todo"
 )
 
 type stubRepo struct {
