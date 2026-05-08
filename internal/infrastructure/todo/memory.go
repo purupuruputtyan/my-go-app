@@ -2,8 +2,8 @@ package memory
 
 import (
 	"errors"
+	"github.com/google/uuid"
 	"my-go-app/internal/domain/todo"
-	"strconv"
 )
 
 type TodoMemory struct {
@@ -21,7 +21,7 @@ func (r *TodoMemory) FindAll() []todo.Todo {
 }
 
 func (r *TodoMemory) Create(todo todo.Todo) todo.Todo {
-	todo.ID = strconv.Itoa(len(r.todos) + 1)
+	todo.ID = uuid.NewString()
 
 	r.todos = append(r.todos, todo)
 
