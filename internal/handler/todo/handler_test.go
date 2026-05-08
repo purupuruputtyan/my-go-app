@@ -2,13 +2,14 @@ package handler
 
 import (
 	"encoding/json"
-	domain "my-go-app/internal/domain/todo"
-	memory "my-go-app/internal/infrastructure/todo"
-	uc "my-go-app/internal/usecase/todo"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	domain "my-go-app/internal/domain/todo"
+	memory "my-go-app/internal/infrastructure/todo"
+	uc "my-go-app/internal/usecase/todo"
 )
 
 func TestTodoHandler_FindAll(t *testing.T) {
@@ -41,7 +42,6 @@ func TestTodoHandler_FindAll(t *testing.T) {
 }
 
 func TestTodoHandler_Create(t *testing.T) {
-
 	repo := memory.NewTodoMemory()
 	usecase := uc.NewTodoUseCase(repo)
 	h := New(usecase)
@@ -74,6 +74,73 @@ func TestTodoHandler_Create(t *testing.T) {
 	}
 }
 
+func TestTodoHandler_Create_EmptyTitle(t *testing.T) {
+	repo := memory.NewTodoMemory()
+	usecase := uc.NewTodoUseCase(repo)
+	h := New(usecase)
+
+	reqBody := strings.NewReader(`{"title":""}`)
+
+	req := httptest.NewRequest(http.MethodPost, "/todos", reqBody)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+
+	h.Create(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", w.Code)
+	}
+}
+
+func TestTodoHandler_Create_TitleTooLong(t *testing.T) {
+	repo := memory.NewTodoMemory()
+	usecase := uc.NewTodoUseCase(repo)
+	h := New(usecase)
+
+	longTitle := "a"
+	for len(longTitle) <= 100 {
+		longTitle += "a"
+	}
+
+	reqBody := strings.NewReader(`{"title":"` + longTitle + `"}`)
+
+	req := httptest.NewRequest(http.MethodPost, "/todos", reqBody)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+
+	h.Create(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", w.Code)
+	}
+}
+
+func TestTodoHandler_Create_InvalidJSON(t *testing.T) {
+	repo := memory.NewTodoMemory()
+	usecase := uc.NewTodoUseCase(repo)
+	h := New(usecase)
+
+	reqBody := strings.NewReader(`{"title":`)
+
+	req := httptest.NewRequest(http.MethodPost, "/todos", reqBody)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+
+	h.Create(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", w.Code)
+	}
+
+	todos := repo.FindAll()
+	if len(todos) != 0 {
+		t.Fatalf("expected 0 todo in repo, got %d", len(todos))
+	}
+}
+
 func TestTodoHandler_Show(t *testing.T) {
 	repo := memory.NewTodoMemory()
 	usecase := uc.NewTodoUseCase(repo)
@@ -103,5 +170,20 @@ func TestTodoHandler_Show(t *testing.T) {
 
 	if got.Title != "first" {
 		t.Fatalf("expected title first, got %s", got.Title)
+	}
+}
+
+func TestTodoHandler_Show_NotFound(t *testing.T) {
+	repo := memory.NewTodoMemory()
+	usecase := uc.NewTodoUseCase(repo)
+	h := New(usecase)
+
+	req := httptest.NewRequest(http.MethodGet, "/todos/not-found-id", nil)
+	w := httptest.NewRecorder()
+
+	h.Show(w, req, "not-found-id")
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d", w.Code)
 	}
 }

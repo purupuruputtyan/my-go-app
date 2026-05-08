@@ -1,39 +1,39 @@
 package memory
 
 import (
-	"errors"
+	"github.com/google/uuid"
+
 	"my-go-app/internal/domain/todo"
-	"strconv"
 )
 
 type TodoMemory struct {
-	todos []todo.Todo
+	todos []domain.Todo
 }
 
 func NewTodoMemory() *TodoMemory {
 	return &TodoMemory{
-		todos: []todo.Todo{},
+		todos: []domain.Todo{},
 	}
 }
 
-func (r *TodoMemory) FindAll() []todo.Todo {
+func (r *TodoMemory) FindAll() []domain.Todo {
 	return r.todos
 }
 
-func (r *TodoMemory) Create(todo todo.Todo) todo.Todo {
-	todo.ID = strconv.Itoa(len(r.todos) + 1)
+func (r *TodoMemory) Create(todo domain.Todo) domain.Todo {
+	todo.ID = uuid.NewString()
 
 	r.todos = append(r.todos, todo)
 
 	return todo
 }
 
-func (r *TodoMemory) Show(id string) (todo.Todo, error) {
+func (r *TodoMemory) Show(id string) (domain.Todo, error) {
 	for _, todo := range r.todos {
 		if todo.ID == id {
 			return todo, nil
 		}
 	}
 
-	return todo.Todo{}, errors.New("not found")
+	return domain.Todo{}, domain.ErrTodoNotFound
 }

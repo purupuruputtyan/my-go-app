@@ -23,7 +23,14 @@ func New(usecase *todo.TodoUseCase) *TodoHandler {
 
 func (h *TodoHandler) FindAll(w http.ResponseWriter, r *http.Request) {
 	todos := h.usecase.FindAll()
-	_ = json.NewEncoder(w).Encode(todos)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(todos); err != nil {
+		http.Error(w, "failed to encode json", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *TodoHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -34,7 +41,11 @@ func (h *TodoHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	todo := h.usecase.Create(req.Title)
+	todo, err := h.usecase.Create(req.Title)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -55,5 +66,8 @@ func (h *TodoHandler) Show(w http.ResponseWriter, r *http.Request, id string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	_ = json.NewEncoder(w).Encode(todo)
+	if err := json.NewEncoder(w).Encode(todo); err != nil {
+		http.Error(w, "failed to encode json", http.StatusInternalServerError)
+		return
+	}
 }
