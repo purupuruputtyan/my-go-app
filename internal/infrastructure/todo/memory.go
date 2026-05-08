@@ -37,3 +37,16 @@ func (r *TodoMemory) Show(id string) (domain.Todo, error) {
 
 	return domain.Todo{}, domain.ErrTodoNotFound
 }
+
+func (r *TodoMemory) Update(todo domain.Todo) (domain.Todo, error) {
+	for i, t := range r.todos {
+		if t.ID == todo.ID {
+			r.todos[i].Title = todo.Title
+			r.todos[i].Completed = todo.Completed
+
+			return r.todos[i], nil
+		}
+	}
+
+	return domain.Todo{}, domain.ErrTodoNotFound
+}
