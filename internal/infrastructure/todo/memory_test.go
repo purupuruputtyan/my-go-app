@@ -20,7 +20,6 @@ func TestTodoMemory_FindAll(t *testing.T) {
 }
 
 func TestTodoMemory_Create(t *testing.T) {
-
 	repo := NewTodoMemory()
 
 	todo := todo.Todo{
@@ -28,6 +27,10 @@ func TestTodoMemory_Create(t *testing.T) {
 	}
 
 	created := repo.Create(todo)
+
+	if created.ID == "" {
+		t.Fatalf("expected id to be set")
+	}
 
 	if created.Title != "first" {
 		t.Fatalf("expected title first, got %s", created.Title)
@@ -39,6 +42,10 @@ func TestTodoMemory_Create(t *testing.T) {
 		t.Fatalf("expected 1 todo, got %d", len(todos))
 	}
 
+	if todos[0].ID == "" {
+		t.Fatalf("expected id to be set")
+	}
+
 	if todos[0].Title != "first" {
 		t.Fatalf("expected title first, got %s", todos[0].Title)
 	}
@@ -47,18 +54,19 @@ func TestTodoMemory_Create(t *testing.T) {
 func TestTodoMemory_Show(t *testing.T) {
 	repo := NewTodoMemory()
 
-	repo.todos = []todo.Todo{
-		{ID: "111", Title: "テスト", Completed: true},
-	}
+	created := repo.Create(todo.Todo{
+		Title:     "テスト",
+		Completed: true,
+	})
 
-	result, err := repo.Show("111")
+	result, err := repo.Show(created.ID)
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	if result.ID != "111" {
-		t.Fatalf("expected id 111, got %s", result.ID)
+	if result.ID != created.ID {
+		t.Fatalf("expected id %s, got %s", created.ID, result.ID)
 	}
 
 	if result.Title != "テスト" {
@@ -73,11 +81,12 @@ func TestTodoMemory_Show(t *testing.T) {
 func TestTodoMemory_Show_NotFound(t *testing.T) {
 	repo := NewTodoMemory()
 
-	repo.todos = []todo.Todo{
-		{ID: "111", Title: "テスト", Completed: true},
-	}
+	_ = repo.Create(todo.Todo{
+		Title:     "テスト",
+		Completed: true,
+	})
 
-	_, err := repo.Show("999")
+	_, err := repo.Show("not-found-id")
 
 	if err == nil {
 		t.Fatalf("expected error, got nil")
