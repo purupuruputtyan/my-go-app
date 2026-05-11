@@ -12,10 +12,10 @@ import (
 	"syscall"
 	"time"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/lib/pq"
 
 	handler "my-go-app/internal/handler/todo"
-	"my-go-app/internal/infrastructure/postgres"
+	postgres "my-go-app/internal/infrastructure/postgres"
 	usecase "my-go-app/internal/usecase/todo"
 )
 
@@ -57,7 +57,7 @@ func newDB() (*sql.DB, error) {
 		os.Getenv("DB_SSLMODE"),
 	)
 
-	db, err := sql.Open("pgx", dsn)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, err
 	}
