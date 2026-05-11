@@ -133,10 +133,22 @@ docker compose down -v
 ## ファイルの役割
 
 - `Dockerfile`  
-  `dev` / `builder` / `prod` のマルチステージ構成。開発と本番想定を分離します。
+  `dev` / `builder` / `prod` のマルチステージ構成。  
+  `dev` ステージには開発用ツールとして `air` と SQLBoiler CLI を入れています。  
+  `prod` ステージにはビルド済みバイナリのみを配置します。
 
 - `docker-compose.yml`  
-  開発時の起動設定。`dev` ステージを使い、コードマウントとポート公開を行います。
+  開発時の起動設定。  
+  `app` service では `dev` ステージを使い、コードマウントとポート公開を行います。  
+  `db` service では PostgreSQL を起動します。
+
+- `db/init.sql`  
+  PostgreSQL 初期化用 SQL です。  
+  初回 DB volume 作成時に実行され、`todos` テーブルなどを作成します。
+
+- `sqlboiler.toml`  
+  SQLBoiler の設定ファイルです。  
+  DB 接続先や生成コードの出力先を定義します。
 
 - `.air.toml`  
   開発専用のホットリロード設定ファイルです（本番想定では使用しません）。
@@ -145,13 +157,46 @@ docker compose down -v
   Docker ビルド時に不要ファイルを除外し、ビルドを軽量化します。
 
 - `cmd/api/main.go`  
-  最小限の API サーバ実装です。
+  API サーバのエントリーポイントです。  
+  ルーティング、サーバ起動、graceful shutdown などを扱います。
 
-- `internal/domain/todo` / `internal/usecase/todo` / `internal/repository/todo` / `internal/handler/todo`  
-  layer-first をベースに、各層の配下を機能単位（todo）で整理した内部パッケージです。
+- `internal/domain/todo`  
+  Todo のドメインモデル、Repository interface、ドメインエラーなどを定義します。
+
+- `internal/usecase/todo`  
+  Todo に関するアプリケーションロジックを扱います。  
+  保存先がメモリか DB かは知りません。
+
+- `internal/infrastructure/todo`  
+  メモリ保存など、具体的な保存実装を置きます。
+
+- `internal/infrastructure/sqlboiler/models`  
+  SQLBoiler によって自動生成される DB モデルです。  
+  手で編集せず、DB スキーマ変更後に再生成します。
+
+- `internal/handler/todo`  
+  HTTP リクエストとレスポンスを扱う層です。  
+  JSON の decode / encode や HTTP status の変換を担当します。
 
 - `.githooks/pre-commit`  
   コミット前に `gofmt` を実行する Git フックです。
 
 - `Makefile`  
   `make fmt` / `make fmt-check` で手動整形・整形チェックができます。
+
+## 依存関係メモ
+
+SQLBoiler 関連の主な依存は以下です。
+
+```txt
+github.com/aarondl/sqlboiler/v4 v4.19.7
+github.com/aarondl/null/v8 v8.1.3
+github.com/lib/pq v1.10.9
+```
+
+SQLBoiler CLI は `go.mod` ではなく、`Dockerfile` の `dev` ステージでインストールします。
+
+```dockerfile
+RUN go install github.com/aarondl/sqlboiler/v4@v4.19.7
+RUN go install github.com/aarondl/sqlboiler/v4/drivers/sqlboiler-psql@v4.19.7
+```

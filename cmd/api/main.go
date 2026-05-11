@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,8 +12,10 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
+
 	handler "my-go-app/internal/handler/todo"
-	memory "my-go-app/internal/infrastructure/todo"
+	"my-go-app/internal/infrastructure/postgres"
 	usecase "my-go-app/internal/usecase/todo"
 )
 
@@ -29,23 +33,53 @@ type todoRoutesHandler interface {
 }
 
 func main() {
-	server := newServer(addr)
+	db, err := newDB()
+	if err != nil {
+		log.Fatalf("failed to connect db: %v", err)
+	}
+	defer db.Close()
+
+	server := newServer(addr, db)
 
 	go listen(server)
 
 	waitForShutdown(server)
 }
 
-func newServer(addr string) *http.Server {
+func newDB() (*sql.DB, error) {
+	dsn := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
+		os.Getenv("DB_SSLMODE"),
+	)
+
+	db, err := sql.Open("pgx", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := db.Ping(); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+
+	return db, nil
+}
+
+func newServer(addr string, db *sql.DB) *http.Server {
 	return &http.Server{
 		Addr:              addr,
-		Handler:           newMux(),
+		Handler:           newMux(db),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 }
 
-func newMux() http.Handler {
-	repo := memory.NewTodoMemory()
+func newMux(db *sql.DB) http.Handler {
+	repo := postgres.NewTodoPostgres(db)
 	todoUsecase := usecase.NewTodoUseCase(repo)
 	todoHandler := handler.New(todoUsecase)
 
