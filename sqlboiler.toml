@@ -1,0 +1,13 @@
+output = "internal/infrastructure/sqlboiler/models"
+pkgname = "models"
+wipe = true
+no-tests = true
+
+[psql]
+dbname = "my_go_app"
+host = "db"
+port = 5432
+user = "my_go_app"
+pass = "password"
+sslmode = "disable"
+schema = "public"
